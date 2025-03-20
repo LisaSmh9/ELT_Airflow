@@ -31,8 +31,8 @@ Cette commande démarre Apache Airflow ainsi que ses dépendances (PostgreSQL, D
 ## 🌐 4. Accéder à l'interface Airflow
 - Ouvrez un navigateur et allez sur http://localhost:8080.
 - Connectez-vous avec :
-     **Utilisateur** : airflow
-     **Mot de passe** : airflow
+     - **Utilisateur** : airflow
+     - **Mot de passe** : airflow
 
 
 
