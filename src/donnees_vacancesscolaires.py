@@ -2,6 +2,22 @@ import pandas as pd
 import holidays
 from vacances_scolaires_france import SchoolHolidayDates
 from datetime import datetime
+from sqlalchemy import create_engine, text, inspect
+from dotenv import load_dotenv
+import os
+
+# Chargement des variables d'environnement
+load_dotenv()
+DATABASE_URL_bronze = os.getenv("DATABASE_URL_bronze")
+
+# Connexion à la base de données
+engine = create_engine(DATABASE_URL_bronze)
+
+def bdd_connect(table_name):
+    """
+    Charge une table SQL dans un DataFrame pandas.
+    """
+    return pd.read_sql(f"SELECT * FROM {table_name}", con=engine)
 
 def collecter_vacances_et_feries(annees=[2023, 2024, 2025]):
     vacances_data = []
@@ -42,7 +58,7 @@ def collecter_vacances_et_feries(annees=[2023, 2024, 2025]):
         "nom_vacances", "is_public_holiday", "public_holiday_name"
     ])
 
-    # 🔍 Filtrer uniquement les jours fériés ou jours de vacances
+    # Filtrer uniquement les jours fériés ou jours de vacances
     df_filtres = df_vacances[
         (df_vacances["is_public_holiday"] == True) |
         (df_vacances["nom_vacances"].notnull())
@@ -50,6 +66,16 @@ def collecter_vacances_et_feries(annees=[2023, 2024, 2025]):
 
     return df_filtres
 
+def update_vacances_table(engine):
+    df = collecter_vacances_et_feries([2023, 2024, 2025])
+    df.to_sql('vacancesscolaires_joursferies', con=engine, if_exists='replace', index=False)
 
-df_vacances_filtres = collecter_vacances_et_feries([2023, 2024, 2025])
-df_vacances_filtres.head(60)
+    with engine.connect() as conn:
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_vacances_date 
+            ON public.vacancesscolaires_joursferies(date);
+        """))
+    print("✅ Table 'vacancesscolaires_joursferies' insérée/mise à jour.")
+
+if __name__ == "__main__":
+    update_vacances_table(engine)
