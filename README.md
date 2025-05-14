@@ -33,6 +33,27 @@ Cette commande démarre Apache Airflow ainsi que ses dépendances (PostgreSQL, D
 - Connectez-vous avec :
      - **Utilisateur** : airflow
      - **Mot de passe** : airflow
+ 
+## 🔄 5. Mettre à jour vers Apache Airflow 2.9 (aka "Airflow 3")
+- Assurez-vous que votre Dockerfile contient : FROM apache/airflow:2.9.1
+- Reconstruire L'environnement avec les étapes suivantes :
+```bash
+docker-compose down
+docker-compose build
+docker-compose up airflow-init
+docker-compose up
+```
+
+## ⚠️ Problèmes fréquents
+- Conflit de conteneur déjà existant (ex : Error: container name "duckdb_gold" is already in use) :
+```bash
+docker rm -f duckdb_gold
+```
+
+## 🧪 Vérification de la version d’Airflow
+```bash
+docker-compose run --rm airflow-webserver airflow version
+```
 
 
 
