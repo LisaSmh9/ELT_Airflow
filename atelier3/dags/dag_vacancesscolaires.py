@@ -43,7 +43,7 @@ default_args = {
 
 with DAG(
     'vacances_et_feries_dag',
-    schedule_interval='@once',
+    schedule_interval='0 1 1 * *',
     default_args=default_args,
     catchup=False
 ) as dag:
@@ -51,3 +51,4 @@ with DAG(
         task_id='extract_and_load_vacances',
         python_callable=extract_and_load_vacances
     )
+dag.doc_md = __doc__
