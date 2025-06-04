@@ -46,9 +46,12 @@ def update_temperature_table():
     if not table_exists:
         beginning_date = datetime(2023, 1, 1).date()
     else:
-        cursor.execute("SELECT MAX(horodate) FROM temperatures;")
+        cursor.execute("SELECT MAX(horodate) FROM temperatures WHERE horodate IS NOT NULL;")
         result = cursor.fetchone()[0]
-        beginning_date = result.date() if result else datetime(2023, 1, 1).date()
+        if result:
+            beginning_date = (result + timedelta(days=1)).date()
+        else:
+            beginning_date = datetime(2023, 1, 1).date()
 
     df_all = pd.DataFrame()
     while beginning_date <= datetime.now().date():
