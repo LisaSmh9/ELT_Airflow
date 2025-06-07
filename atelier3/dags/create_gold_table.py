@@ -16,7 +16,7 @@ def notify_success(context):
     # Convertir en timezone Europe/Paris
     exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
     exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
-    subject = f"Exécution réussie !"
+    subject =  "Exécution réussie !"
     body = f"Le DAG {context['dag'].dag_id} a terminé avec succès à {exec_date_str}."
     send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
 
