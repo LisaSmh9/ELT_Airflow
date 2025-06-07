@@ -6,8 +6,32 @@ from airflow.hooks.postgres_hook import PostgresHook
 from sqlalchemy import create_engine
 import os
 from dotenv import load_dotenv
+from airflow.utils.email import send_email
+from zoneinfo import ZoneInfo
 
 load_dotenv() 
+
+def notify_success(context):
+    exec_date = context['execution_date']
+    # Convertir en timezone Europe/Paris
+    exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
+    exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
+    subject = f"DAG {context['dag'].dag_id} réussi"
+    body = f"Le DAG {context['dag'].dag_id} a terminé avec succès à {exec_date_str}."
+    send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
+
+def notify_failure(context):
+    exec_date = context['execution_date']
+    exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
+    exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
+    subject = f"DAG {context['dag'].dag_id} a échoué"
+    body = f"""
+    Le DAG {context['dag'].dag_id} a échoué à {exec_date_str}
+    Task : {context['task_instance'].task_id}
+    Erreur : {context['exception']}
+    """
+    send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
+
 
 def transform_and_load_to_duckdb():
     # Connexion PostgreSQL
@@ -17,34 +41,22 @@ def transform_and_load_to_duckdb():
     coeffs_df = hook.get_pandas_df("SELECT * FROM profil_coefficients")
 
     
-    # conn = hook.get_conn()
-    # cursor = conn.cursor()
-    
-    # # Extraction des données PostgreSQL
-    # cursor.execute("""
-    #     SELECT * FROM holidays
-    #     ;
-    # """)
-    # holidays_df = cursor.fetchone()[0]
-    
-    # cursor.execute("""
-    #     SELECT * FROM temperatures
-    #     ;
-    # """)
-    # temps_df = cursor.fetchone()[0]
-    
-    # cursor.execute("""
-    #     SELECT * FROM profil_coefficients
-    #     ;
-    # """)
-    # coeffs_df = cursor.fetchone()[0]
+    # Transformation des horodate sur le même fuseau
+    temps_df['horodate'] = pd.to_datetime(temps_df['horodate']).dt.tz_convert('UTC').dt.tz_localize(None)
+    coeffs_df['horodate'] = pd.to_datetime(coeffs_df['horodate']).dt.tz_convert('UTC').dt.tz_localize(None)
+
 
     # Fusion des tables
     df = temps_df.merge(coeffs_df, on="horodate", how="left")
-    df = df.merge(holidays_df, left_on=df["horodate"].dt.date, right_on="date", how="left")
+    
+    # Création colonne date_only pour faciliter la jointure
+    df["date_only"] = df["horodate"].dt.date
+    df = df.merge(holidays_df, left_on="date_only", right_on="date", how="left")
+    df.drop(columns=["date_only"], inplace=True)
+
 
     # Calcul des champs temporels
-    df["timestamp"] = pd.to_datetime(df["horodate"])
+    df['timestamp'] = pd.to_datetime(df['horodate'])
     df["day_of_week"] = df["timestamp"].dt.weekday
     df["day_of_year"] = df["timestamp"].dt.dayofyear
     df["half_hour"] = df["timestamp"].dt.hour * 2 + df["timestamp"].dt.minute // 30
@@ -84,9 +96,10 @@ with DAG(
     default_args=default_args,
     schedule_interval=None,
     catchup=False,
-    description="DAG to transform data from Postgres and load into DuckDB"
+    description="DAG to transform data from Postgres and load into DuckDB",
+    on_success_callback=notify_success,
+    on_failure_callback=notify_failure,
 ) as dag:
-
     transform_task = PythonOperator(
         task_id='transform_and_load_to_duckdb',
         python_callable=transform_and_load_to_duckdb
