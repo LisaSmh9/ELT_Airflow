@@ -34,7 +34,7 @@ def extract_and_load_vacances():
         "nom_vacances", "is_public_holiday", "public_holiday_name"
     ])
     df_filtered = df[(df["is_public_holiday"] == True) | (df["nom_vacances"].notnull())]
-    df_filtered.to_sql("vacances_et_feries", con=engine, if_exists="replace", index=False)
+    df_filtered.to_sql("holidays", con=engine, if_exists="replace", index=False)
 
 default_args = {
     'start_date': datetime(2024, 1, 1),
