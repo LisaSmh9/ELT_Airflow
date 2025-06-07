@@ -85,7 +85,7 @@ def update_temperature_table():
             """)
             conn.commit()
 
-        # Préparer l'insertion via COPY (rapide et sûr)
+        # Préparer l'insertion via COPY 
         buffer = io.StringIO()
         df_all.to_csv(buffer, index=False, header=False, sep="\t", na_rep='\\N')
         buffer.seek(0)
