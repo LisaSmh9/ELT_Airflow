@@ -6,31 +6,36 @@ from airflow.hooks.postgres_hook import PostgresHook
 from sqlalchemy import create_engine
 import os
 from dotenv import load_dotenv
-from airflow.utils.email import send_email
-from zoneinfo import ZoneInfo
+from utils.callbacks_modules import notify_failure, notify_success
+from airflow.datasets import Dataset
+
+# from airflow.utils.email import send_email
+# from zoneinfo import ZoneInfo
+TEMPERATURE_TABLE_DATASET = Dataset("table_temperatures")
+COEFFICIENTS_TABLE_DATASET = Dataset("table_profil_coefficients")
 
 load_dotenv() 
 
-def notify_success(context):
-    exec_date = context['execution_date']
-    # Convertir en timezone Europe/Paris
-    exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
-    exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
-    subject =  "Exécution réussie !"
-    body = f"Le DAG {context['dag'].dag_id} a terminé avec succès à {exec_date_str}."
-    send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
+# def notify_success(context):
+#     exec_date = context['execution_date']
+#     # Convertir en timezone Europe/Paris
+#     exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
+#     exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
+#     subject =  "Exécution réussie !"
+#     body = f"Le DAG {context['dag'].dag_id} a terminé avec succès à {exec_date_str}."
+#     send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
 
-def notify_failure(context):
-    exec_date = context['execution_date']
-    exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
-    exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
-    subject = f"L'exécution à échoué !"
-    body = f"""
-    Le DAG {context['dag'].dag_id} a échoué à {exec_date_str}
-    Task : {context['task_instance'].task_id}
-    Erreur : {context['exception']}
-    """
-    send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
+# def notify_failure(context):
+#     exec_date = context['execution_date']
+#     exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
+#     exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
+#     subject = f"L'exécution à échoué !"
+#     body = f"""
+#     Le DAG {context['dag'].dag_id} a échoué à {exec_date_str}
+#     Task : {context['task_instance'].task_id}
+#     Erreur : {context['exception']}
+#     """
+#     send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
 
 
 def transform_and_load_to_duckdb():
@@ -47,7 +52,7 @@ def transform_and_load_to_duckdb():
 
 
     # Fusion des tables
-    df = temps_df.merge(coeffs_df, on="horodate", how="left")
+    df = coeffs_df.merge(temps_df, on="horodate", how="left")
     
     # Création colonne date_only pour faciliter la jointure
     df["date_only"] = df["horodate"].dt.date
@@ -94,7 +99,7 @@ default_args = {
 with DAG(
     'transform_postgres_to_duckdb',
     default_args=default_args,
-    schedule_interval=None,
+    schedule=[TEMPERATURE_TABLE_DATASET, COEFFICIENTS_TABLE_DATASET],
     catchup=False,
     description="DAG to transform data from Postgres and load into DuckDB",
     on_success_callback=notify_success,
