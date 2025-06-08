@@ -8,6 +8,8 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 import io
+from utils.callbacks_modules import notify_failure
+
 
 # -- Définition du Dataset --
 TEMPERATURE_TABLE_DATASET = Dataset("table_temperatures") # Définition du dataset qui represente la table
@@ -132,7 +134,8 @@ with DAG(
     start_date=days_ago(1),
     schedule_interval="0 8 * * *", # Tous les jours à 8h du matin
     catchup=False,
-    tags=["elt", "temperatures", "producteur"] 
+    tags=["elt", "temperatures", "producteur"],
+    on_failure_callback=notify_failure
 ) as dag:
 
     update_temperatures_task = PythonOperator(
