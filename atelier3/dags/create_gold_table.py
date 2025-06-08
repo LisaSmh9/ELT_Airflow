@@ -1,3 +1,4 @@
+# Import librairies
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -8,42 +9,21 @@ import os
 from dotenv import load_dotenv
 from utils.callbacks_modules import notify_failure, notify_success
 from airflow.datasets import Dataset
+load_dotenv() 
 
-# from airflow.utils.email import send_email
-# from zoneinfo import ZoneInfo
+# Création des datasets pour le wait
 TEMPERATURE_TABLE_DATASET = Dataset("table_temperatures")
 COEFFICIENTS_TABLE_DATASET = Dataset("table_profil_coefficients")
 
-load_dotenv() 
 
-# def notify_success(context):
-#     exec_date = context['execution_date']
-#     # Convertir en timezone Europe/Paris
-#     exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
-#     exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
-#     subject =  "Exécution réussie !"
-#     body = f"Le DAG {context['dag'].dag_id} a terminé avec succès à {exec_date_str}."
-#     send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
-
-# def notify_failure(context):
-#     exec_date = context['execution_date']
-#     exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
-#     exec_date_str = exec_date_paris.strftime("%Y-%m-%d %H:%M:%S %Z")
-#     subject = f"L'exécution à échoué !"
-#     body = f"""
-#     Le DAG {context['dag'].dag_id} a échoué à {exec_date_str}
-#     Task : {context['task_instance'].task_id}
-#     Erreur : {context['exception']}
-#     """
-#     send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
-
+beginning_date_str = "2023-01-01"
 
 def transform_and_load_to_duckdb():
     # Connexion PostgreSQL
     hook = PostgresHook(postgres_conn_id="postgres_bronze")
-    holidays_df = hook.get_pandas_df("SELECT * FROM holidays")
-    temps_df = hook.get_pandas_df("SELECT * FROM temperatures")
-    coeffs_df = hook.get_pandas_df("SELECT * FROM profil_coefficients")
+    holidays_df = hook.get_pandas_df(f"SELECT * FROM holidays WHERE date >= '{beginning_date_str}'")
+    temps_df = hook.get_pandas_df(f"SELECT * FROM temperatures WHERE horodate >= '{beginning_date_str}'")
+    coeffs_df = hook.get_pandas_df(f"SELECT * FROM profil_coefficients WHERE horodate >= '{beginning_date_str}'")
 
     
     # Transformation des horodate sur le même fuseau
