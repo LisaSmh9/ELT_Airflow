@@ -1,13 +1,18 @@
+# -- Import --
+from airflow.datasets import Dataset
+from airflow.utils.dates import days_ago
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.utils.dates import days_ago
 import pandas as pd
 import requests
 from datetime import datetime, timedelta
 import io
 
+# -- Définition du Dataset --
+TEMPERATURE_TABLE_DATASET = Dataset("table_temperatures") # Définition du dataset qui represente la table
 
+# --- Execution du code ---
 def fetch_temperatures(beginning_date, end_date):
     base_url = "https://data.enedis.fr/api/explore/v2.1/catalog/datasets/donnees-de-temperature-et-de-pseudo-rayonnement/records"
     all_data, offset, limit = [], 0, 100
@@ -125,12 +130,13 @@ def update_temperature_table():
 with DAG(
     dag_id="elt_temperature_pipeline",
     start_date=days_ago(1),
-    schedule_interval="@daily",
+    schedule_interval="0 8 * * *", # Tous les jours à 8h du matin
     catchup=False,
-    tags=["elt", "temperatures"]
+    tags=["elt", "temperatures", "producteur"] 
 ) as dag:
 
     update_temperatures_task = PythonOperator(
         task_id="update_temperature_table",
         python_callable=update_temperature_table,
+        outlets=[TEMPERATURE_TABLE_DATASET] # Cette tâche, quand elle réussit, met à jour le Dataset.
     )
