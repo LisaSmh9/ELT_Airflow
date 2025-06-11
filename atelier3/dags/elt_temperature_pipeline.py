@@ -12,6 +12,8 @@ from datetime import datetime, timedelta
 import io
 from utils.callbacks_modules import notify_failure, notify_success
 import logging
+print("Callback notify_failure:", notify_failure)
+print("Callback notify_success:", notify_success)
 
 
 
@@ -148,11 +150,12 @@ with DAG(
     schedule_interval="0 8 * * *",
     catchup=False,
     tags=["elt", "temperatures", "producteur"],
-    on_failure_callback=notify_failure,
-    on_success_callback=notify_success
+    
 ) as dag:
     update_temperatures_task = PythonOperator(
         task_id="update_temperature_table",
         python_callable=update_temperature_table,
         outlets=[TEMPERATURE_TABLE_DATASET],
+        on_failure_callback=notify_failure,
+        #on_success_callback=notify_success,
     )
