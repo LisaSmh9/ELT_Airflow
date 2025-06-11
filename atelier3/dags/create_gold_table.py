@@ -22,7 +22,6 @@ BEGINNING_DATE_STR = "2023-01-01"
 
 def transform_data(holidays_df: pd.DataFrame, temps_df: pd.DataFrame, coeffs_df: pd.DataFrame) -> pd.DataFrame:
     """
-    Contient UNIQUEMENT la logique de transformation des données.
     Prend des DataFrames en entrée, retourne un DataFrame transformé.
     Cette fonction est testable unitairement car elle ne dépend d'aucune connexion externe.
     """
@@ -40,7 +39,7 @@ def transform_data(holidays_df: pd.DataFrame, temps_df: pd.DataFrame, coeffs_df:
     df = df.merge(holidays_df, left_on="date_only", right_on="date", how="left")
     df.drop(columns=["date_only", "date"], inplace=True) # Supprimer les colonnes de jointure
 
-    # Calcul des champs temporels
+    # Calcul des champs temporels demandés
     df['timestamp'] = pd.to_datetime(df['horodate'])
     df["day_of_week"] = df["timestamp"].dt.weekday
     df["day_of_year"] = df["timestamp"].dt.dayofyear
@@ -110,7 +109,7 @@ with DAG(
     default_args=default_args,
     schedule=[TEMPERATURE_TABLE_DATASET, COEFFICIENTS_TABLE_DATASET],
     catchup=False,
-    description="DAG to transform data from Postgres and load into DuckDB (Testable Version)",
+    description="DAG to transform data from Postgres and load into DuckDB",
 ) as dag:
     transform_task = PythonOperator(
         task_id='transform_and_load_to_duckdb',
