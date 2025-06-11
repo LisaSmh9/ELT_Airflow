@@ -10,12 +10,7 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 import io
-from utils.callbacks_modules import notify_failure, notify_success
-import logging
-print("Callback notify_failure:", notify_failure)
-print("Callback notify_success:", notify_success)
-
-
+from utils.callbacks_modules import notify_failure
 
 
 # -- Définition du Dataset --
@@ -157,5 +152,4 @@ with DAG(
         python_callable=update_temperature_table,
         outlets=[TEMPERATURE_TABLE_DATASET],
         on_failure_callback=notify_failure,
-        #on_success_callback=notify_success,
     )
