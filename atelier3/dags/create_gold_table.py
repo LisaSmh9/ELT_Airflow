@@ -1,4 +1,6 @@
-# Import librairies
+# =============================================================================
+#                           IMPORT LIBRAIRIES ET MODULES
+# =============================================================================
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -19,6 +21,10 @@ COEFFICIENTS_TABLE_DATASET = Dataset("table_profil_coefficients")
 
 # Constante pour la date de début
 BEGINNING_DATE_STR = "2023-01-01"
+
+# =============================================================================
+#                            LOGIQUE DE LA TÂCHE
+# =============================================================================
 
 def transform_data(holidays_df: pd.DataFrame, temps_df: pd.DataFrame, coeffs_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -103,7 +109,10 @@ default_args = {
     'retries': 1,
 }
 
-# Définition du DAG
+# =============================================================================
+#                            DÉFINITION DU DAG
+# =============================================================================
+
 with DAG(
     'transform_postgres_to_duckdb',
     default_args=default_args,
