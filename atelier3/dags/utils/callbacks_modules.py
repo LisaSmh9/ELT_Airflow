@@ -1,12 +1,10 @@
 from dotenv import load_dotenv
 from airflow.utils.email import send_email
 from zoneinfo import ZoneInfo
-import logging
 
 load_dotenv() 
 
 def notify_success(context):
-    logging.info('test')
     exec_date = context['execution_date']
     # Convertir en timezone Europe/Paris
     exec_date_paris = exec_date.astimezone(ZoneInfo("Europe/Paris"))
@@ -14,7 +12,6 @@ def notify_success(context):
     subject =  "Exécution réussie !"
     body = f"Le DAG {context['dag'].dag_id} a terminé avec succès à {exec_date_str}."
     send_email(to="emmanuelle.le-gal@supdevinci-edu.fr", subject=subject, html_content=body)
-    print('email envoyé !')
 
 def notify_failure(context):
     exec_date = context['execution_date']

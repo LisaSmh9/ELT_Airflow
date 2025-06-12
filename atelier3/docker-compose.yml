@@ -130,6 +130,7 @@ services:
 
   airflow-webserver:
     <<: *airflow-common
+    env_file : .env
     command: webserver
     ports:
       - "8080:8080"
@@ -147,6 +148,7 @@ services:
 
   airflow-scheduler:
     <<: *airflow-common
+    env_file : .env
     command: scheduler
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
