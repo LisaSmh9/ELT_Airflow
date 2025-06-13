@@ -50,6 +50,5 @@ def test_task_count(dag_bag):
     """
     Teste que le DAG contient exactement 1 tâche.
     """
-    # CORRECTION: On accède directement au DAG via le dictionnaire.
     dag = dag_bag.dags['vacances_et_feries_dag']
     assert len(dag.tasks) == 1
