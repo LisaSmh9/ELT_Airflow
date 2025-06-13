@@ -34,7 +34,7 @@ Cette commande démarre Apache Airflow ainsi que ses dépendances (PostgreSQL, D
      - **Utilisateur** : airflow
      - **Mot de passe** : airflow
  
-## 🔄 5. Mettre à jour vers Apache Airflow 2.9 (aka "Airflow 3")
+## 🔄 5. Mettre à jour vers Apache Airflow 2.9
 - Assurez-vous que votre Dockerfile contient : FROM apache/airflow:2.9.1
 - Reconstruire L'environnement avec les étapes suivantes :
 ```bash
