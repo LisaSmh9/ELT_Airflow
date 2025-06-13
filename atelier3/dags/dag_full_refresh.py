@@ -83,7 +83,13 @@ with DAG(
             type="boolean",
             default=False,
             title="Confirmer le rafraîchissement complet",
-            description="ACTION IRRÉVERSIBLE. Si coché, toutes les tables seront supprimées et la pipeline sera rechargée séquentiellement.",
+            description='''
+            ACTION IRRÉVERSIBLE. Si coché, toutes les tables seront supprimées et la pipeline sera rechargée séquentiellement.
+            
+            EN CAS DE SUCCES : reception d'un e-mail 'Le DAG transform_postgres_to_duckdb a terminé avec succès'
+            
+            EN CAS D'ECHEC : reception d'un e-mail 'Le DAG transform_postgres_to_duckdb a échoué'
+            ''',
         )
     }
 ) as dag:
@@ -122,11 +128,6 @@ with DAG(
     # Tâches de fin pour un graphe propre
     end_aborted = DummyOperator(task_id='end_aborted')
     
-    end_success = DummyOperator(
-        task_id='end_success',
-        on_success_callback=notify_success,
-        trigger_rule='all_success'
-    )
 
     # --- Exécution ---
     
@@ -137,6 +138,5 @@ with DAG(
 
     # Chemin séquentiel si l'utilisateur confirme
     check_confirmation_branch >> delete_tables
-    #delete_tables >> trigger_vacances >> trigger_temperatures >> trigger_coefficients >> trigger_finale >> end_success
-    delete_tables >> trigger_vacances >> trigger_temperatures >> end_success
+    delete_tables >> trigger_vacances >> trigger_temperatures 
 
