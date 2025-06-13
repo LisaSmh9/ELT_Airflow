@@ -1,6 +1,5 @@
-# =============================================================================
-#                           IMPORT LIBRAIRIES ET MODULES
-# =============================================================================
+# --- Import des librairies ---
+
 from airflow.datasets import Dataset
 from airflow.utils.dates import days_ago
 from airflow import DAG
@@ -10,15 +9,14 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 import io
+import os
 from utils.callbacks_modules import notify_failure
 
 
 # -- Définition du Dataset --
-TEMPERATURE_TABLE_DATASET = Dataset("table_temperatures")
+temperature_table_dataset = Dataset("table_temperatures")
 
-# =============================================================================
-#                            LOGIQUE DE LA TÂCHE (ETL)
-# =============================================================================
+# --- Worflow ---
 
 def fetch_temperatures(beginning_date, end_date):
     """
@@ -63,7 +61,7 @@ def fetch_temperatures(beginning_date, end_date):
 
 
 def update_temperature_table():
-    hook = PostgresHook(postgres_conn_id="postgres_bronze")
+    hook = PostgresHook(postgres_conn_id="postgres_default")
     conn = hook.get_conn()
     cursor = conn.cursor()
 
@@ -136,9 +134,7 @@ def update_temperature_table():
 
 
 
-# =============================================================================
-#                            DÉFINITION DU DAG
-# =============================================================================
+# --- Définition du DAG ---
 with DAG(
     dag_id="elt_temperature_pipeline",
     start_date=days_ago(1),
@@ -150,6 +146,6 @@ with DAG(
     update_temperatures_task = PythonOperator(
         task_id="update_temperature_table",
         python_callable=update_temperature_table,
-        outlets=[TEMPERATURE_TABLE_DATASET],
+        outlets=[temperature_table_dataset],
         on_failure_callback=notify_failure,
     )
