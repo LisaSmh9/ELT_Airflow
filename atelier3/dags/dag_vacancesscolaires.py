@@ -1,3 +1,4 @@
+# --- Import des librairies et modules ---
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -7,6 +8,9 @@ from vacances_scolaires_france import SchoolHolidayDates
 from sqlalchemy import create_engine
 import os
 from dotenv import load_dotenv
+from utils.callbacks_modules import notify_failure,notify_success
+
+# --- Logique de la tâche ---
 
 def extract_and_load_vacances():
     load_dotenv()
@@ -40,6 +44,7 @@ default_args = {
     'start_date': datetime(2024, 1, 1),
     'retries': 1
 }
+# --- Définition du DAG ---
 
 with DAG(
     'vacances_et_feries_dag',
@@ -49,6 +54,8 @@ with DAG(
 ) as dag:
     extract_load_task = PythonOperator(
         task_id='extract_and_load_vacances',
-        python_callable=extract_and_load_vacances
+        python_callable=extract_and_load_vacances,
+        on_failure_callback=notify_failure,
+        on_success_callback=notify_success,
     )
 dag.doc_md = __doc__

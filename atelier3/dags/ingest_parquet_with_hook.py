@@ -8,14 +8,17 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.datasets import Dataset
-from airflow.utils.email import send_email
+from utils.callbacks_modules import notify_failure
+
 
 # --- Définition du Dataset de sortie ---
-COEFF_DATASET = Dataset("bronze/coefficients_electriques")
+COEFF_DATASET = Dataset("table_profil_coefficients")
+temperature_table_dataset = Dataset("table_temperatures")
+
 
 # Configuration
 PARQUET_FOLDER = "/opt/airflow/local_parquet"
-TABLE_NAME     = "coefficients_electriques"
+TABLE_NAME     = "profil_coefficients"
 KEY_COLS       = ["horodate", "sous_profil"]
 
 # Logger
@@ -28,46 +31,17 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-def _notify_success(context):
-    ti     = context['task_instance']
-    dag_id = ti.dag_id
-    run_id = ti.run_id
-    subject = f"[Airflow] DAG Success: {dag_id}"
-    body = f"""
-    DAG <b>{dag_id}</b> a réussi.<br>
-    Run ID: {run_id}<br>
-    Date: {context['ts']}<br>
-    <a href="{ti.log_url}">Voir les logs</a>
-    """
-    # Remplacez par votre adresse Outlook
-    send_email(to=["dag_airflow_elt_on_succes_or_fail@outlook.com"], subject=subject, html_content=body)
-
-def _notify_failure(context):
-    ti     = context['task_instance']
-    dag_id = ti.dag_id
-    run_id = ti.run_id
-    subject = f"[Airflow] DAG Failure: {dag_id}"
-    body = f"""
-    ⚠️ DAG <b>{dag_id}</b> a échoué.<br>
-    Run ID: {run_id}<br>
-    Date: {context['ts']}<br>
-    <a href="{ti.log_url}">Voir les logs</a>
-    """
-    send_email(to=["dag_airflow_elt_on_succes_or_fail@outlook.com"], subject=subject, html_content=body)
-
 with DAG(
     dag_id="ingestion_parquet_postgres_multi",
     default_args=default_args,
-    schedule_interval="*/5 * * * *",
+    schedule = [temperature_table_dataset],
     catchup=False,
     tags=["elt", "parquet", "coeff"],
     description="Ingestion de fichiers Parquet avec UPSERT Postgres via hook.get_conn()",
-    on_success_callback=_notify_success,
-    on_failure_callback=_notify_failure,
 ) as dag:
 
     def ingest_multiple_parquets():
-        logger.info("▶️ Démarrage de l’ingestion des fichiers Parquet")
+        logger.info("Démarrage de l’ingestion des fichiers Parquet")
         hook = PostgresHook(postgres_conn_id="postgres_default")
         conn = hook.get_conn()
         cur  = conn.cursor()
@@ -98,7 +72,7 @@ with DAG(
                 logger.debug("Fichier déjà traité, skip : %s", fname)
                 continue
 
-            logger.info("➡️ Traitement de %s", fname)
+            logger.info("Traitement de %s", fname)
             df = pd.read_parquet(os.path.join(PARQUET_FOLDER, fname))
             df = df[["horodate","sous_profil",
                      "coefficient_ajuste",
@@ -171,7 +145,7 @@ with DAG(
                 DROP TABLE {tmp};
             """)
             conn.commit()
-            logger.info("✅ %s ingéré et upsert effectué", fname)
+            logger.info("%s ingéré et upsert effectué", fname)
 
             # Marquer traité
             open(done_flag, "w").close()
@@ -185,4 +159,5 @@ with DAG(
         task_id="ingest_all_new_parquets",
         python_callable=ingest_multiple_parquets,
         outlets=[COEFF_DATASET],
+        on_failure_callback=notify_failure,
     )

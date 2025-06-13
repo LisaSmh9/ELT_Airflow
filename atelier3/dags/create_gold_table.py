@@ -1,6 +1,4 @@
-# =============================================================================
-#                           IMPORT LIBRAIRIES ET MODULES
-# =============================================================================
+# --- Import librairies et modules ---
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -16,15 +14,13 @@ from airflow.datasets import Dataset
 load_dotenv() 
 
 # Création des datasets pour le déclenchement
-TEMPERATURE_TABLE_DATASET = Dataset("table_temperatures")
-COEFFICIENTS_TABLE_DATASET = Dataset("table_profil_coefficients")
+temperature_table_dataset = Dataset("table_temperatures")
+coefficients_table_dataset = Dataset("table_profil_coefficients")
 
 # Constante pour la date de début
-BEGINNING_DATE_STR = "2023-01-01"
+begining_date_str = "2023-01-01"
 
-# =============================================================================
-#                            LOGIQUE DE LA TÂCHE
-# =============================================================================
+# --- Logique de la tâche ---
 
 def transform_data(holidays_df: pd.DataFrame, temps_df: pd.DataFrame, coeffs_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -32,8 +28,8 @@ def transform_data(holidays_df: pd.DataFrame, temps_df: pd.DataFrame, coeffs_df:
     Cette fonction est testable unitairement car elle ne dépend d'aucune connexion externe.
     """
     # Transformation des horodate sur le même fuseau
-    temps_df['horodate'] = pd.to_datetime(temps_df['horodate']).dt.tz_convert('UTC').dt.tz_localize(None)
-    coeffs_df['horodate'] = pd.to_datetime(coeffs_df['horodate']).dt.tz_convert('UTC').dt.tz_localize(None)
+    temps_df['horodate'] = pd.to_datetime(temps_df['horodate']).dt.tz_convert('UTC')
+    coeffs_df['horodate'] = pd.to_datetime(coeffs_df['horodate']).dt.tz_localize('Europe/Paris').dt.tz_convert('UTC')
 
     # Fusion des tables
     df = coeffs_df.merge(temps_df, on="horodate", how="left")
@@ -78,9 +74,9 @@ def extract_transform_and_load():
     # EXTRACTION 
     print("Connecting to PostgreSQL to extract data...")
     hook = PostgresHook(postgres_conn_id="postgres_bronze")
-    holidays_df = hook.get_pandas_df(f"SELECT * FROM holidays WHERE date >= '{BEGINNING_DATE_STR}'")
-    temps_df = hook.get_pandas_df(f"SELECT * FROM temperatures WHERE horodate >= '{BEGINNING_DATE_STR}'")
-    coeffs_df = hook.get_pandas_df(f"SELECT * FROM profil_coefficients WHERE horodate >= '{BEGINNING_DATE_STR}'")
+    holidays_df = hook.get_pandas_df(f"SELECT * FROM holidays WHERE date >= '{begining_date_str}'")
+    temps_df = hook.get_pandas_df(f"SELECT * FROM temperatures WHERE horodate >= '{begining_date_str}'")
+    coeffs_df = hook.get_pandas_df(f"SELECT * FROM profil_coefficients WHERE horodate >= '{begining_date_str}'")
     print("Extraction complete.")
 
     # TRANSFORMATION 
@@ -109,14 +105,12 @@ default_args = {
     'retries': 1,
 }
 
-# =============================================================================
-#                            DÉFINITION DU DAG
-# =============================================================================
+# --- Définition du DAG ---
 
 with DAG(
     'transform_postgres_to_duckdb',
     default_args=default_args,
-    schedule=[TEMPERATURE_TABLE_DATASET, COEFFICIENTS_TABLE_DATASET],
+    schedule=[temperature_table_dataset, coefficients_table_dataset],
     catchup=False,
     description="DAG to transform data from Postgres and load into DuckDB",
 ) as dag:

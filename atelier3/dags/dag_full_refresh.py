@@ -1,4 +1,4 @@
-# Import librairies
+# --- Import des librairies et modules ---
 import logging
 import os
 from datetime import datetime, timedelta
@@ -12,8 +12,6 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
-# Assurez-vous que le fichier callbacks.py est bien dans votre dossier dags
-# et qu'il contient les fonctions `notify_full_refresh_failure` et `notify_full_refresh_success`
 from utils.callbacks_modules import notify_failure, notify_success
 
 load_dotenv()
@@ -108,31 +106,18 @@ with DAG(
     # Déclenchement séquentiel des DAGs métier
     trigger_vacances = TriggerDagRunOperator(
         task_id="trigger_dag_vacances",
-        trigger_dag_id="vacances_et_feries_dag", # VÉRIFIEZ L'ID DE VOTRE DAG
+        trigger_dag_id="vacances_et_feries_dag", 
         wait_for_completion=True,
         execution_timeout=long_task_timeout,
     )
 
     trigger_temperatures = TriggerDagRunOperator(
-        task_id="trigger_dag_temperatures",
-        trigger_dag_id="elt_temperature_pipeline", # VÉRIFIEZ L'ID DE VOTRE DAG
+        task_id="trigger_on_cascade_dag_temperatures_profil_coeff_gold_table",
+        trigger_dag_id="elt_temperature_pipeline",
         wait_for_completion=True,
         execution_timeout=long_task_timeout,
     )
 
-    trigger_coefficients = TriggerDagRunOperator(
-        task_id="trigger_dag_coefficients",
-        trigger_dag_id="update_coefficient_profil", # VÉRIFIEZ L'ID DE VOTRE DAG
-        wait_for_completion=True,
-        execution_timeout=long_task_timeout,
-    )
-
-    trigger_finale = TriggerDagRunOperator(
-        task_id="trigger_dag_finale",
-        trigger_dag_id="transform_postgres_to_duckdb", # VÉRIFIEZ L'ID DE VOTRE DAG
-        wait_for_completion=True,
-        execution_timeout=long_task_timeout,
-    )
 
     # Tâches de fin pour un graphe propre
     end_aborted = DummyOperator(task_id='end_aborted')
@@ -140,14 +125,18 @@ with DAG(
     end_success = DummyOperator(
         task_id='end_success',
         on_success_callback=notify_success,
-        trigger_rule='all_success' # Règle par défaut, mais explicite ici
+        trigger_rule='all_success'
     )
 
-    # Définition du flux de tâches séquentiel
+    # --- Exécution ---
+    
     start >> check_confirmation_branch
-
-    # Chemin "Annulé"
+    
+    # Chemin si l'utilisateur annule
     check_confirmation_branch >> end_aborted
 
-    # Chemin "Confirmé"
-    check_confirmation_branch >> delete_tables >> trigger_vacances >> trigger_temperatures >> trigger_coefficients >> trigger_finale >> end_success
+    # Chemin séquentiel si l'utilisateur confirme
+    check_confirmation_branch >> delete_tables
+    #delete_tables >> trigger_vacances >> trigger_temperatures >> trigger_coefficients >> trigger_finale >> end_success
+    delete_tables >> trigger_vacances >> trigger_temperatures >> end_success
+
