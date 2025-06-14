@@ -71,9 +71,8 @@ Cette commande démarre Apache Airflow ainsi que ses dépendances (PostgreSQL, D
      - **Mot de passe** : airflow
 
 ## ⛏️ Description des DAGs
-Le projet est composé de plusieurs **DAGs Apache Airflow spécialisés**, chacun orchestrant une étape précise du pipeline ELT :
+Le projet est composé de plusieurs **DAGs Apache Airflow**, chacun orchestrant une étape précise du pipeline ELT :
 
-```bash
 | DAG | Description |
 |-----|-------------|
 | `dag_vacancesscolaires.py` | Extrait les jours fériés (librairie `holidays`) et vacances scolaires (librairie `vacances_scolaires_france`) pour les années 2023 à 2025, puis les stocke dans la base PostgreSQL. |
@@ -81,7 +80,6 @@ Le projet est composé de plusieurs **DAGs Apache Airflow spécialisés**, chacu
 | `ingest_parquet_with_hook.py` | Ingère les coefficients de profils depuis un fichier `.parquet` (présent dans le dossier `CDP/`), en effectuant un **UPSERT** dans PostgreSQL sur les clés `(horodate, sous_profil)`. |
 | `create_gold_table.py` | Fusionne les trois sources (vacances, températures, coefficients) pour créer une table finale propre dans **DuckDB** (`data_model_inputs`) avec toutes les transformations temporelles nécessaires. |
 | `dag_full_refresh.py` | Supprime toutes les tables de la base (bronze et gold) si confirmé manuellement, puis enchaîne automatiquement l'exécution de tous les DAGs métiers. |
-```
 
 ## 🧪 Tests
 
