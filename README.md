@@ -3,7 +3,7 @@
 ## 🎯 Objectif du projet
 Ce projet a pour objectif de mettre en place une pipeline ELT (Extract → Load → Transform)  orchestrée avec Apache Airflow, pour collecter, stocker et transformer des données nécessaires à la prédiction de la consommation énergétique (coefficient des profils).
 Il permet de collecter automatiquement les données suivantes :
-- Les températures normales et réalisées (depuis une API publique)
+- Les températures normales et réalisées (depuis une API)
 - Les jours fériés et vacances scolaires en France
 - Les coefficients de profils (depuis un fichier Parquet)
 Ces données sont chargées dans **PostgreSQL (bronze)**, puis transformées et stockées dans **DuckDB (gold)**.
