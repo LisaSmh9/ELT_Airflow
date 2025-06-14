@@ -46,7 +46,7 @@ Cette commande démarre Apache Airflow ainsi que ses dépendances (PostgreSQL, D
 
 
 ## 🧩 Structure du projet
-
+```bash
 atelier3/
 ├── dags/                      # Contient les DAGs Airflow définissant les étapes du pipeline
 │   ├── dag_vacancesscolaires.py     # Extraction des vacances scolaires et jours fériés
@@ -70,5 +70,5 @@ atelier3/
 ├── docker-compose.yml         # Définit les services : Airflow, PostgreSQL, DuckDB...
 requirements.txt               # Dépendances Python
 README.md                      # Documentation du projet 
-
+```
 
