@@ -98,7 +98,30 @@ pytest tests/
 
 ## 🧯 Monitoring
 
+Le projet intègre un mécanisme de monitoring via des callbacks définis dans dags/utils/callbacks_modules.py.
+Ces fonctions permettent de notifier automatiquement l’équipe en cas de succès ou d’échec des tâches critiques dans les DAGs.
+
+🔔 Notifications
+
+**notify_success(context) :** appelée automatiquement lorsqu’une tâche se termine avec succès.
+
+**notify_failure(context) :** appelée lorsqu’une tâche échoue.
+
 ## 🔁 Mode Full Refresh
+
+Le DAG **dag_full_refresh** permet un nettoyage total des données et une relance séquentielle de tous les DAGs du projet.
+
+### ✅ Fonctionnement
+
+Suppression des tables : temperatures, profil_coefficients, holidays, data_model_inputs
+
+Recréation des données depuis les sources (API, Librairies, Fichier)
+
+Rechargement complet de la table finale dans DuckDB
+```bash
+⚠️ ATTENTION : Opération irréversible
+```
+
 
 ## 🧰 Stack technique
 
