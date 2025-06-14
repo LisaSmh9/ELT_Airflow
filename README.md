@@ -12,7 +12,7 @@ Ces données sont chargées dans **PostgreSQL (bronze)**, puis transformées et 
 ## 🚀 Lancement du projet
 ```bash
 git clone https://github.com/LisaSmh9/ELT_Airflow.git
-cd atelier3
+cd ELT_Airflow/atelier3
 ```
 ## 🧩 Structure du projet
 ```bash
