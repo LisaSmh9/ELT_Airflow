@@ -82,6 +82,19 @@ Le projet est composé de plusieurs **DAGs Apache Airflow**, chacun orchestrant 
 | `dag_full_refresh.py` | Supprime toutes les tables de la base (bronze et gold) si confirmé manuellement, puis enchaîne automatiquement l'exécution de tous les DAGs métiers. |
 
 ## 🧪 Tests
+### Structure des tests
+
+| Test | Description |
+|-----|-------------|
+| `test_dag_vacancesscolaires.py` | Vérifie que le DAG des vacances s’importe correctement et que ses tâches sont bien définies. |
+| `test_elt_temperature_pipeline.py` | Mocke les appels à l’API Enedis pour tester la récupération de températures (succès + échec HTTP). |
+| `test_gold_table.py` | Valide la logique de transformation finale vers la table data_model_inputs de DuckDB. |
+| `test_ingest_parquet.py` | Simule l’ingestion de fichiers .parquet, vérifie le comportement d’idempotence et la gestion des .done. |
+
+### Lancer les tests
+```bash
+pytest tests/
+```
 
 ## 🧯 Monitoring
 
@@ -89,18 +102,18 @@ Le projet est composé de plusieurs **DAGs Apache Airflow**, chacun orchestrant 
 
 ## 🧰 Stack technique
 
-Orchestration : Apache Airflow (v2.9.1)
+**Orchestration :** Apache Airflow (v2.9.1)
 
-Base de données : PostgreSQL (bronze)
+**Base de données :** PostgreSQL (bronze)
 
-Data Warehouse : DuckDB (gold)
+**Data Warehouse :** DuckDB (gold)
 
-Conteneurisation : Docker, Docker Compose
+**Conteneurisation :** Docker, Docker Compose
 
-Langage : Python
+**Langage :** Python
 
-Tests : Pytest
+**Tests :** Pytest
 
-Librairies data : pandas, sqlalchemy, holidays, vacances_scolaires_france
+**Librairies data :** pandas, sqlalchemy, holidays, vacances_scolaires_france
 
 
