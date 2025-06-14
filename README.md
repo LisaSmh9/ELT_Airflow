@@ -46,32 +46,29 @@ Cette commande démarre Apache Airflow ainsi que ses dépendances (PostgreSQL, D
 
 
 ## 🧩 Structure du projet
+
 atelier3/
-├── dags/                        → Contient les DAGs Airflow définissant les étapes du pipeline :
-│   ├── dag_vacancesscolaires.py     → Extraction des vacances scolaires et jours fériés
-│   ├── elt_temperature_pipeline.py  → Pipeline d’extraction des températures
-│   ├── ingest_parquet_with_hook.py  → Ingestion des coefficients de profils (parquet)
-│   ├── create_gold_table.py         → Création de la table finale dans DuckDB (gold)
-│   ├── dag_full_refresh.py          → Tâche de suppression des tables (full refresh)
-│   └── main_dag.py                  → (Facultatif ou global) Coordination possible des DAGs
+├── dags/                      # Contient les DAGs Airflow définissant les étapes du pipeline
+│   ├── dag_vacancesscolaires.py     # Extraction des vacances scolaires et jours fériés
+│   ├── elt_temperature_pipeline.py  # Pipeline d’extraction des températures
+│   ├── ingest_parquet_with_hook.py  # Ingestion des coefficients de profils (parquet)
+│   ├── create_gold_table.py         # Création de la table finale dans DuckDB (gold)
+│   ├── dag_full_refresh.py          # Tâche de suppression des tables (full refresh)
+│   └── main_dag.py                  
 │
-├── tests/                      → Tests unitaires pour valider chaque composant du pipeline :
+├── tests/                     # Tests unitaires pour valider chaque composant du pipeline
 │   ├── test_dag_vacancesscolaires.py
 │   ├── test_elt_temperature_pipeline.py
 │   ├── test_ingest_parquet.py
 │   └── test_gold_table.py
 │
-├── CDP/                        → Dossier contenant le fichier `coefficients-des-profils.parquet`
-│
-├── docker/                     → Configuration Docker additionnelle (notamment DuckDB)
-│
-├── logs/                       → Dossier de stockage des logs générés par Airflow
-│
-├── Dockerfile                  → Image personnalisée d’Apache Airflow avec les dépendances
-├── docker-compose.yml          → Orchestration de tous les services (Airflow, PostgreSQL, DuckDB...)
-├── requirements.txt            → Dépendances Python pour le projet
-└── README.md                   → Documentation du projet (ce fichier)
+├── CDP/                       # Contient le fichier coefficients-des-profils.parquet
+├── docker/                    # Configuration Docker 
+├── logs/                      # Stockage des logs Airflow
 
-
+├── Dockerfile                 # Image Docker personnalisée pour Airflow
+├── docker-compose.yml         # Définit les services : Airflow, PostgreSQL, DuckDB...
+requirements.txt               # Dépendances Python
+README.md                      # Documentation du projet 
 
 
