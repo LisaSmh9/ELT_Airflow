@@ -6,6 +6,7 @@ Il permet de collecter automatiquement les données suivantes :
 - Les températures normales et réalisées (depuis une API)
 - Les jours fériés et vacances scolaires en France (depuis des librairies)
 - Les coefficients de profils (depuis un fichier Parquet)
+  
 Ces données sont chargées dans **PostgreSQL (bronze)**, puis transformées et stockées dans **DuckDB (gold)**.
 
 ## 🚀 Lancement du projet
